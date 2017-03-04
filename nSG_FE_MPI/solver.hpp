@@ -110,7 +110,7 @@ public:
         xa = x1;
         xe = x2;
         h = (xe-xa) / ((double) (N+1)) ;
-        dt = h*h/2/1000;
+        dt = h*h/2/10000;
         r = dt/h/h;
         std::cout << dt << "\n";
         left_nb = FUNC::topo_left_bound(world_rank, world_size);
