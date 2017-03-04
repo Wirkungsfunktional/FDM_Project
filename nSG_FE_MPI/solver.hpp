@@ -67,7 +67,7 @@ struct nSG
         std::ofstream myfile;
         myfile.open("Results.txt");
         for (int i=0; i<size; i++) {
-            myfile << u[i] "\n";
+            myfile << u[i] << "\n";
         }
         myfile.close();
 
