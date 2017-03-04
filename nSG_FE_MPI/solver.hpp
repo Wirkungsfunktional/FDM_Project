@@ -5,7 +5,7 @@
 #include <cmath>
 #include <math.h>
 #include <complex>
-
+#include <fstream>
 
 
 struct Heat_eq
@@ -36,6 +36,9 @@ struct Heat_eq
     }
 };
 
+
+
+
 struct nSG
 {
     static inline int topo_left_bound(int rank, int size){
@@ -61,6 +64,13 @@ struct nSG
         return u[i] + I*r*(u[i-1] - 2.0*u[i] + u[i+1]) - I*0.5*k*std::abs(u[i])*std::abs(u[i])*u[i];
     }
     static inline void write_data_to_file(std::complex<double>* u, int size){
+        std::ofstream myfile;
+        myfile.open("Results.txt");
+        for (int i=0; i<size; i++) {
+            myfile << u[i] "\n";
+        }
+        myfile.close();
+
         for (int i=0; i<size; i++) {
             std::cout << std::abs(u[i]) << " ";
         }
@@ -79,7 +89,7 @@ class solver {
 private:
     int world_rank;
     int world_size;
-    int reduced_sys_size;
+    int reduced_sys_size, real_size;
     DATA_T *u;
     double ta, te, dt;
     double h, r;
@@ -92,7 +102,8 @@ public:
         std::cout << "Init " << rank << "\n";
         world_rank = rank;
         world_size = size;
-        reduced_sys_size = N / world_size;
+        real_size = N;
+        reduced_sys_size = real_size / world_size;
         u = new DATA_T[reduced_sys_size];
         ta = t1;
         te = t2;
@@ -137,11 +148,18 @@ void solver<FUNC, DATA_T>::run() {
 
 
         if (world_rank == 0) {
-            FUNC::write_data_to_file(u, reduced_sys_size);
+            DATA_T erg[real_size];
+            for (int i=0;i<reduced_sys_size; i++) {
+                erg[i] = u[i];
+            }
             for (int i=1; i< world_size; i++) {
                 MPI_Recv(u, reduced_sys_size, MPI_DOUBLE, i, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-                FUNC::write_data_to_file(u, reduced_sys_size);
+                for (int k=0;k<reduced_sys_size; k++) {
+                    erg[i*reduced_sys_size + k] = u[k];
+                }
+
             }
+            FUNC::write_data_to_file(erg, real_size);
         } else {
             MPI_Send(u, reduced_sys_size, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
         }
