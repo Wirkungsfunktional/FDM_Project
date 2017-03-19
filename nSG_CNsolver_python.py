@@ -94,7 +94,7 @@ def nSG_time_conv_plot():
 
 
 def main(args):
-    #test_plot()
+    test_plot()
     nSG_space_conv_plot()
     nSG_time_conv_plot()
     

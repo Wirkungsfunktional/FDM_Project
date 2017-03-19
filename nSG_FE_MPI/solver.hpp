@@ -97,6 +97,12 @@ struct nSG
 
 
 
+
+
+
+
+
+
 template<class FUNC, typename DATA_T>
 class solver {
 
@@ -105,6 +111,7 @@ private:
     int world_size;
     int reduced_sys_size, real_size;
     DATA_T *u;
+    FUNC *pde;
     double ta, te, dt;
     double h, r;
     double xa, xe;
@@ -112,11 +119,11 @@ private:
     int left_nb, right_nb;
 
 public:
-    explicit solver(int N, int size, int rank, double t1, double t2, double x1, double x2) {
+    explicit solver(int size, int rank) {
         std::cout << "Init " << rank << "\n";
         world_rank = rank;
         world_size = size;
-        real_size = FUNC::N;
+        real_size = pde->get_N();
         reduced_sys_size = real_size / world_size;
         u = new DATA_T[reduced_sys_size];
         ta = FUNC::ta;
@@ -150,11 +157,7 @@ void solver<FUNC, DATA_T>::run() {
             MPI_Send(&u[reduced_sys_size-1], 1, MPI_DOUBLE, right_nb, 0, MPI_COMM_WORLD);
             MPI_Recv(&rbound, 1, MPI_DOUBLE, right_nb, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
             MPI_Recv(&lbound, 1, MPI_DOUBLE, left_nb, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-            u[0] = FUNC::eval_with_left_bound(u, lbound, r, dt);
-            u[reduced_sys_size-1] = FUNC::eval_with_right_bound(u, rbound, r, reduced_sys_size, dt);
-            for (int i=1; i<reduced_sys_size-1; i++) {
-                u[i] = FUNC::eval(u, i, r, dt);
-            }
+            FUNC::eval(u, i, r, dt)
             ta += dt;
         }
         std::cout << "complete eval in " << world_rank << "\n";
