@@ -45,6 +45,7 @@ def nSG_solve(N, xa, xe, ta, te, dt, func_u0):
     h = (xe - xa) / (N+1)
     x = np.arange(xa+h, xe+h/2, h)
     u0 = func_u0(x)
+    print l*dt/2.0
     t = [ta]
     while (ta < te):
         u0 = newton_krylov(lambda a: residual(a, u0, h, dt), u0)
@@ -55,9 +56,10 @@ def nSG_solve(N, xa, xe, ta, te, dt, func_u0):
     
 
 def test_plot():
-    u, x, t = nSG_solve(400, -np.pi, np.pi, 0, 0.01, 0.00001, u0)
+    u, x, t = nSG_solve(15, -np.pi, np.pi, 0, 1, 0.01, u0)
     
     plt.plot(x, np.abs(u)**2 )
+    plt.ylim(0.9, 1.1)
     plt.plot(x, np.abs( ana_u(x, t[-1]) )**2 )
     
     plt.show()
@@ -95,8 +97,8 @@ def nSG_time_conv_plot():
 
 def main(args):
     test_plot()
-    nSG_space_conv_plot()
-    nSG_time_conv_plot()
+    #nSG_space_conv_plot()
+    #nSG_time_conv_plot()
     
     
     return 0
